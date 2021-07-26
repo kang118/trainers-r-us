@@ -1253,11 +1253,11 @@ def viewChat():
                     return render_template('TrainerViewChat.html', username=trainername, room=roomname, trainer=username, email=email)
         else:
             print("No Chats Found")
-
-            if session["check"] == "User":
-                return render_template("AllMemberChats.html")
-            else:
-                return render_template('AllTrainerChats.html')
+            return redirect(url_for("allChats"))
+            # if session["check"] == "User":
+            #   return render_template("AllMemberChats.html")
+            # else:
+            #   return render_template('AllTrainerChats.html')
     else:
         return render_template("HomePage.html")
 
