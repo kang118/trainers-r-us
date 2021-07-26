@@ -1201,7 +1201,9 @@ def viewChat():
 
                 roomnum = check_roomnum(username, email)
                 if test:
+                    print("messages found")
                     if test == "No messages":
+                        print("No Messages")
                         return render_template('ViewChat.html', username=name, room=roomnum, trainer=trainername, email=email)
                     else:
                         return render_template("ViewChat.html", username=name, room=roomnum, messages=test, trainer=trainername, email=email)
@@ -1229,7 +1231,9 @@ def viewChat():
                 trainertuple = get_trainer(trainer)
                 trainername = trainertuple[5]
                 if test:
+                    print("Messages found")
                     if test == "No messages":
+                        print("No Messages")
                         return render_template('TrainerViewChat.html', username=trainername, room=roomnum, trainer=username, email=email)
                     else:
                         return render_template("TrainerViewChat.html", username=trainername, room=roomnum, messages=test, trainer=username, email=email)
@@ -1249,10 +1253,11 @@ def viewChat():
                     return render_template('TrainerViewChat.html', username=trainername, room=roomname, trainer=username, email=email)
         else:
             print("No Chats Found")
+
             if session["check"] == "User":
-                return render_template("ViewChat.html")
+                return render_template("AllMemberChats.html")
             else:
-                return render_template('TrainerViewChat.html')
+                return render_template('AllTrainerChats.html')
     else:
         return render_template("HomePage.html")
 
