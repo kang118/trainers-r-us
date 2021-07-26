@@ -17,7 +17,7 @@ config = {
     "projectId": "trainers-r-us",
     "databaseURL": "https://trainers-r-us-default-rtdb.asia-southeast1.firebasedatabase.app/",
     "storageBucket": "trainers-r-us.appspot.com",
-    "serviceAccount": "trainers-r-us/serviceAccountKey.json",
+    "serviceAccount": "serviceAccountKey.json",
     "messagingSenderId": "128175027453",
     "appId": "1:128175027453:web:4b91f00815ac01c4747a94",
     "measurementId": "G-6JY1N1W5ZY"
@@ -74,7 +74,8 @@ def memberLogin():
         if auth.get_account_info(user["idToken"])["users"][0]['emailVerified'] == True:
             return redirect(url_for("memberHome"))
         else:
-            flash("Email has not been verified, you have been sent another verification email.")
+            flash(
+                "Email has not been verified, you have been sent another verification email.")
             auth.send_email_verification(user["idToken"])
             print(
                 "Email has not been verified, you have been sent another verification email.")
