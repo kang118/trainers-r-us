@@ -209,15 +209,19 @@ def createNewMember():
                     print("Successfully uploaded personal details")
                     try:
                         if filename == "" or filename[-3:] != "jpg":
-                            path_on_cloud = "member_images/" + str(emailTwo) + ".jpg"
-                            storage.child(path_on_cloud).put("trainers-r-us\static\img\workout3.jpg")
+                            path_on_cloud = "member_images/" + \
+                                str(emailTwo) + ".jpg"
+                            storage.child(path_on_cloud).put(
+                                "trainers-r-us\static\img\workout3.jpg")
                             print("data has been created")
                         else:
-                            path_on_cloud = "member_images/" + str(emailTwo) + ".jpg"
+                            path_on_cloud = "member_images/" + \
+                                str(emailTwo) + ".jpg"
                             storage.child(path_on_cloud).put(pic)
                             print("data has been created")
                         try:
-                            user = auth.create_user_with_email_and_password(email, pw)
+                            user = auth.create_user_with_email_and_password(
+                                email, pw)
                             print("Successfully created an account")
                             auth.send_email_verification(user["idToken"])
                             flash("Please go to your email to verify your account")
@@ -299,15 +303,19 @@ def createNewTrainer():
                     print("Successfully uploaded personal details")
                     try:
                         if filename == "" or filename[-3:] != "jpg":
-                            path_on_cloud = "trainer_images/" + str(emailTwo) + ".jpg"
-                            storage.child(path_on_cloud).put("trainers-r-us\static\img\workout3.jpg")
+                            path_on_cloud = "trainer_images/" + \
+                                str(emailTwo) + ".jpg"
+                            storage.child(path_on_cloud).put(
+                                "static\img\workout3.jpg")
                             print("data has been created")
                         else:
-                            path_on_cloud = "trainer_images/" + str(emailTwo) + ".jpg"
+                            path_on_cloud = "trainer_images/" + \
+                                str(emailTwo) + ".jpg"
                             storage.child(path_on_cloud).put(pic)
                             print("data has been created")
                         try:
-                            user = auth.create_user_with_email_and_password(email, pw)
+                            user = auth.create_user_with_email_and_password(
+                                email, pw)
                             print("Successfully created an account")
                             auth.send_email_verification(user["idToken"])
                             flash("Please go to your email to verify your account")
@@ -316,11 +324,11 @@ def createNewTrainer():
                             print("Email already exists in database")
                             flash("Email already exists in database")
                             return render_template("CreateNewTrainer.html")
-                      
+
                     except:
                         print("Image was not uploaded properly")
                         flash("Image was not uploaded properly")
-                        return render_template("CreateNewTrainer.html")         
+                        return render_template("CreateNewTrainer.html")
                 except:
                     print("Details were not successfully uploaded")
                     flash("Details were not successfully uploaded")
