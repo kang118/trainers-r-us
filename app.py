@@ -1190,6 +1190,7 @@ def viewChat():
     if "username" in session:
         if request.args.get("email"):
             email = request.args.get("email")
+            print(email)
             if session["check"] == "User":
                 print("user logged in")
                 trainer = get_trainer(email)
