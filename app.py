@@ -251,7 +251,7 @@ def createNewMember():
                             path_on_cloud = "member_images/" + \
                                 str(emailTwo) + ".jpg"
                             storage.child(path_on_cloud).put(
-                                "trainers-r-us\static\img\workout3.jpg")
+                                "static\img\workout3.jpg")
                             try:
                                 user = auth.create_user_with_email_and_password(
                                     email, pw)
@@ -378,7 +378,7 @@ def createNewTrainer():
                             path_on_cloud = "member_images/" + \
                                 str(emailTwo) + ".jpg"
                             storage.child(path_on_cloud).put(
-                                "trainers-r-us\static\img\workout3.jpg")
+                                "static\img\workout3.jpg")
                             try:
                                 user = auth.create_user_with_email_and_password(
                                     email, pw)
