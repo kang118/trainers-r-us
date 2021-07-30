@@ -23,8 +23,8 @@ config = {
     "measurementId": "G-6JY1N1W5ZY"
 }
 
-app.config['MAX_CONTENT_LENGTH'] = 1024 * 1024
-app.config['UPLOAD_EXTENSIONS'] = ['.jpg', '.png', '.gif', 'jpeg', "JPEG"]
+# app.config['MAX_CONTENT_LENGTH'] = 1024 * 1024
+app.config['UPLOAD_EXTENSIONS'] = ['.jpg', '.png', '.gif', '.jpeg', ".JPEG"]
 app.config["ALLOWED_IMAGE_EXTENSIONS"] = ["JPEG", "JPG", "PNG", "GIF"]
 firebase = pyrebase.initialize_app(config)
 auth = firebase.auth()
@@ -164,9 +164,6 @@ def trainerHome():
 @app.route('/createNewMember', methods=["POST", "GET"])
 def createNewMember():
     if request.method == "POST":
-        pic = request.files["picture"]
-        print(pic)
-        filename = pic.filename
         try:
             # getting the email and pw
             email = str(request.form["email"])
@@ -184,8 +181,9 @@ def createNewMember():
             print(trglvl)
             trgtype = str(request.form["trgtype"])
             print(trgtype)
+            pic = request.files["picture"]
             print(pic)
-            print(type(pic))
+            filename = pic.filename
             print('test')
             if database.child("Users").child(str(emailTwo)).get().val() != None or database.child("Trainers").child(str(emailTwo)).get().val() != None:
                 flash(
@@ -207,6 +205,10 @@ def createNewMember():
                 print("not all the characters are numbers")
                 flash("Please enter a valid number")
                 return render_template("CreateNewMember.html")
+            elif filename == "":
+                print("File is empty please submit a file")
+                flash("File is empty please submit a file")
+                return render_template("CreateNewMember.html")
             else:
                 try:
                     emailTwo = email.replace(".", "_DOT_")
@@ -214,6 +216,7 @@ def createNewMember():
                             "Gender": gender, "Training Level": trglvl, "Training Type": trgtype}
                     database.child("Users").child(emailTwo).set(data)
                     print("Successfully uploaded personal details")
+<<<<<<< HEAD
                     try:
                         if filename != '':
                             print("file is not empty")
@@ -221,14 +224,39 @@ def createNewMember():
                             file_ext = os.path.splitext(filename)[1]
                             ext = filename.rsplit(".", 1)[1]
                             if file_ext not in current_app.config['UPLOAD_EXTENSIONS']:
+=======
+                    try:                
+                        print(filename)
+                        file_ext = os.path.splitext(filename)[1]
+                        ext = filename.rsplit(".", 1)[1]
+                        if file_ext not in current_app.config['UPLOAD_EXTENSIONS']:
+                            database.child("Users").child(emailTwo).remove()
+                            print("Wrong format!")
+                            flash("Wrong format!")
+                            return render_template("CreateNewMember.html")
+                        else:
+                            if ext.upper() not in app.config["ALLOWED_IMAGE_EXTENSIONS"]:
+                                database.child("Users").child(emailTwo).remove()
+>>>>>>> 6c36e3d5d7994ee14b1913952b6b29e013454e7d
                                 print("Wrong format!")
                                 flash("Wrong format!")
                                 return render_template("CreateNewMember.html")
                             else:
-                                if ext.upper() not in app.config["ALLOWED_IMAGE_EXTENSIONS"]:
-                                    print("Wrong format!")
-                                    flash("Wrong format!")
+                                path_on_cloud = "member_images/" + str(emailTwo) + ".jpg"
+                                storage.child(path_on_cloud).put(pic)
+                                print("data has been created")
+                                try:
+                                    user = auth.create_user_with_email_and_password(email, pw)
+                                    print("Successfully created an account")
+                                    auth.send_email_verification(user["idToken"])
+                                    flash("Please go to your email to verify your account")
+                                    return redirect(url_for("memberLogin"))
+                                except:
+                                    database.child("Users").child(emailTwo).remove()
+                                    print("Email already exists in database")
+                                    flash("Email already exists in database")
                                     return render_template("CreateNewMember.html")
+<<<<<<< HEAD
                                 else:
                                     path_on_cloud = "member_images/" + \
                                         str(emailTwo) + ".jpg"
@@ -264,8 +292,12 @@ def createNewMember():
                                 print("Email already exists in database")
                                 flash("Email already exists in database")
                                 return render_template("CreateNewMember.html")
+=======
+>>>>>>> 6c36e3d5d7994ee14b1913952b6b29e013454e7d
                     except:
+                        database.child("Users").child(emailTwo).remove()
                         print("Image was not uploaded properly")
+                        print("account details removed from database")
                         flash("Image was not uploaded properly")
                         return render_template("CreateNewMember.html")
                 except:
@@ -283,10 +315,7 @@ def createNewMember():
 @app.route('/createNewTrainer', methods=["POST", "GET"])
 def createNewTrainer():
     if request.method == "POST":
-        pic = request.files["picture"]
-        print(pic)
-        filename = pic.filename
-        print(filename)
+        
         try:
             email = str(request.form["email"])
             print(email)
@@ -310,6 +339,10 @@ def createNewTrainer():
             # need to allow the users to click multiple values
             pricerange = str(request.form["pricerange"])
             print(pricerange)
+            pic = request.files["picture"]
+            print(pic)
+            filename = pic.filename
+            print(filename)
             print('test')
             if database.child("Users").child(str(emailTwo)).get().val() != None or database.child("Trainers").child(str(emailTwo)).get().val() != None:
                 flash(
@@ -334,13 +367,22 @@ def createNewTrainer():
             elif len(str(description)) > 300:
                 flash("Please enter less than 90 words")
                 return render_template("CreateNewTrainer.html")
+<<<<<<< HEAD
             else:
+=======
+            elif filename == "":
+                print("File is empty please submit a file")
+                flash("File is empty please submit a file")
+                return render_template("CreateNewTrainer.html")
+            else:     
+>>>>>>> 6c36e3d5d7994ee14b1913952b6b29e013454e7d
                 try:
                     emailTwo = email.replace(".", "_DOT_")
                     data = {"Email": emailTwo, "Name": name, "Number": number, "Location": location,
                             "Gender": gender, "Description": description, "Experience": experience, "Training Type": trgtype, "Price Range": pricerange}
                     database.child("Trainers").child(emailTwo).set(data)
                     print("Successfully uploaded personal details")
+<<<<<<< HEAD
                     try:
                         if filename != '':
                             print("file is not empty")
@@ -348,14 +390,40 @@ def createNewTrainer():
                             file_ext = os.path.splitext(filename)[1]
                             ext = filename.rsplit(".", 1)[1]
                             if file_ext not in current_app.config['UPLOAD_EXTENSIONS']:
+=======
+                    try:                
+                        print("file is not empty")
+                        print(filename)
+                        file_ext = os.path.splitext(filename)[1]
+                        ext = filename.rsplit(".", 1)[1]
+                        if file_ext not in current_app.config['UPLOAD_EXTENSIONS']:
+                            database.child("Users").child(emailTwo).remove()
+                            print("Wrong format!")
+                            flash("Wrong format!")
+                            return render_template("CreateNewTrainer.html")
+                        else:
+                            if ext.upper() not in app.config["ALLOWED_IMAGE_EXTENSIONS"]:
+                                database.child("Users").child(emailTwo).remove()
+>>>>>>> 6c36e3d5d7994ee14b1913952b6b29e013454e7d
                                 print("Wrong format!")
                                 flash("Wrong format!")
                                 return render_template("CreateNewTrainer.html")
                             else:
-                                if ext.upper() not in app.config["ALLOWED_IMAGE_EXTENSIONS"]:
-                                    print("Wrong format!")
-                                    flash("Wrong format!")
+                                path_on_cloud = "trainer_images/" + str(emailTwo) + ".jpg"
+                                storage.child(path_on_cloud).put(pic)
+                                print("data has been created")
+                                try:
+                                    user = auth.create_user_with_email_and_password(email, pw)
+                                    print("Successfully created an account")
+                                    auth.send_email_verification(user["idToken"])
+                                    flash("Please go to your email to verify your account")
+                                    return redirect(url_for("trainerLogin"))
+                                except:
+                                    database.child("Users").child(emailTwo).remove()
+                                    print("Email already exists in database")
+                                    flash("Email already exists in database")
                                     return render_template("CreateNewTrainer.html")
+<<<<<<< HEAD
                                 else:
                                     path_on_cloud = "trainer_images/" + \
                                         str(emailTwo) + ".jpg"
@@ -391,8 +459,12 @@ def createNewTrainer():
                                 print("Email already exists in database")
                                 flash("Email already exists in database")
                                 return render_template("CreateNewTrainer.html")
+=======
+>>>>>>> 6c36e3d5d7994ee14b1913952b6b29e013454e7d
                     except:
+                        database.child("Trainers").child(emailTwo).remove()
                         print("Image was not uploaded properly")
+                        print("account details removed from database")
                         flash("Image was not uploaded properly")
                         return render_template("CreateNewTrainer.html")
                 except:
