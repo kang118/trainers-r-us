@@ -24,7 +24,8 @@ config = {
 }
 
 app.config['MAX_CONTENT_LENGTH'] = 1024 * 1024
-app.config['UPLOAD_EXTENSIONS'] = ['.jpg']
+app.config['UPLOAD_EXTENSIONS'] = ['.jpg', '.png', '.gif', 'jpeg', "JPEG"]
+app.config["ALLOWED_IMAGE_EXTENSIONS"] = ["JPEG", "JPG", "PNG", "GIF"]
 firebase = pyrebase.initialize_app(config)
 auth = firebase.auth()
 database = firebase.database()
@@ -60,27 +61,33 @@ def memberLogin():
             flash(unsuccessful)
             print("You do not have an account with us")
             return redirect(url_for("memberLogin"))
-        try:
-            user = auth.sign_in_with_email_and_password(username, password)
-            # return redirect(url_for("memberLogin"))
-            print(successful)
-            session["username"] = usernameTwo
-            session["userToken"] = user
-            session["check"] = "User"
-        except:
-            flash(unsuccessful)
-            print(unsuccessful)
-            return redirect(url_for("memberLogin"))
-        if auth.get_account_info(user["idToken"])["users"][0]['emailVerified'] == True:
-            return redirect(url_for("memberHome"))
         else:
-            flash(
-                "Email has not been verified, you have been sent another verification email.")
-            auth.send_email_verification(user["idToken"])
-            print(
-                "Email has not been verified, you have been sent another verification email.")
-            return render_template("MemberLogin.html")
-
+            try:
+                user = auth.sign_in_with_email_and_password(username, password)
+                # return redirect(url_for("memberLogin"))
+                print(successful)
+                try:
+                    if auth.get_account_info(user["idToken"])["users"][0]['emailVerified'] == True:
+                        session["username"] = usernameTwo
+                        session["userToken"] = user
+                        session["check"] = "User"
+                        print("email is verified")
+                        return redirect(url_for("memberHome"))
+                    else:
+                        flash(unsuccessful)
+                        print(unsuccessful)
+                        flash(
+                            "Email has not been verified, you have been sent another verification email.")
+                        auth.send_email_verification(user["idToken"])
+                        print(
+                            "Email has not been verified, you have been sent another verification email.")
+                        return render_template("MemberLogin.html")
+                except:
+                    return render_template("MemberLogin.html")
+            except:
+                flash(unsuccessful)
+                print(unsuccessful)
+                return redirect(url_for("memberLogin"))
     return render_template("MemberLogin.html")
 
 
@@ -98,41 +105,34 @@ def trainerLogin():
             flash(unsuccessful)
             print("You do not have an account with us")
             return redirect(url_for("trainerLogin"))
-        try:
-            user = auth.sign_in_with_email_and_password(email, password)
-            print(successful)
-            session["username"] = usernameTwo
-            session["userToken"] = user
-            session["check"] = "Trainer"
-            session["pendingBookings"] = numpending
-            trainername = get_trainer(usernameTwo)[5]
-
-        except:
-            flash(unsuccessful)
-            print(unsuccessful)
-            return redirect(url_for("trainerLogin"))
-        if auth.get_account_info(user["idToken"])["users"][0]['emailVerified'] == True:
-            # if numpending == "No Pending Bookings":
-            #     flash("You have no pending bookings")
-            #     return redirect(url_for("trainerHome"))
-            # else:
-            #     count = len(numpending)
-            #     if count == 1:
-            #         print(count)
-            #         flash("You have " + str(count) + " pending booking")
-            #     else:
-            #         print(count)
-            #         flash("You have " + str(count) + " pending bookings")
-            return redirect(url_for("trainerHome"))
         else:
-            flash(
-                "Email has not been verified, you have been sent another verification email.")
-            auth.send_email_verification(user["idToken"])
-            print(
-                "Email has not been verified, you have been sent another verification email.")
-            return render_template("TrainerLogin.html")
-
-    return render_template("TrainerLogin.html")
+            try:
+                user = auth.sign_in_with_email_and_password(email, password)
+                print(successful)
+                session["username"] = usernameTwo
+                session["userToken"] = user
+                session["check"] = "Trainer"
+                session["pendingBookings"] = numpending
+                trainername = get_trainer(usernameTwo)[5]
+                try:
+                    if auth.get_account_info(user["idToken"])["users"][0]['emailVerified'] == True:
+                        print("email is verified")
+                        return redirect(url_for("trainerHome"))
+                    else:
+                        flash(
+                            "Email has not been verified, you have been sent another verification email.")
+                        auth.send_email_verification(user["idToken"])
+                        print(
+                            "Email has not been verified, you have been sent another verification email.")
+                        return render_template("TrainerLogin.html")
+                except:
+                    return render_template("TrainerLogin.html")
+            except:
+                flash(unsuccessful)
+                print(unsuccessful)
+                return redirect(url_for("trainerLogin"))
+    else:
+        return render_template("TrainerLogin.html")
 
 # Member and Trainer Home Page
 
@@ -171,6 +171,7 @@ def createNewMember():
             # getting the email and pw
             email = str(request.form["email"])
             print(email)
+            emailTwo = email.replace(".", "_DOT_")
             pw = str(request.form["userpassword"])
             print(pw)
             name = str(request.form["membername"])
@@ -184,8 +185,14 @@ def createNewMember():
             trgtype = str(request.form["trgtype"])
             print(trgtype)
             print(pic)
+            print(type(pic))
             print('test')
-            if len(pw) < 6:
+            if database.child("Users").child(str(emailTwo)).get().val() != None or database.child("Trainers").child(str(emailTwo)).get().val() != None:
+                flash(
+                    "User in database already, please use another email to create an account")
+                print("User in database already")
+                return render_template("CreateNewMember.html")
+            elif len(pw) < 6:
                 flash("Password too short please try a new one")
                 return render_template("CreateNewMember.html")
             elif len(number) != 8:
@@ -208,28 +215,55 @@ def createNewMember():
                     database.child("Users").child(emailTwo).set(data)
                     print("Successfully uploaded personal details")
                     try:
-                        if filename == "" or filename[-3:] != "jpg":
+                        if filename != '':
+                            print("file is not empty")
+                            print(filename)
+                            file_ext = os.path.splitext(filename)[1]
+                            ext = filename.rsplit(".", 1)[1]
+                            if file_ext not in current_app.config['UPLOAD_EXTENSIONS']:
+                                print("Wrong format!")
+                                flash("Wrong format!")
+                                return render_template("CreateNewMember.html")
+                            else:
+                                if ext.upper() not in app.config["ALLOWED_IMAGE_EXTENSIONS"]:
+                                    print("Wrong format!")
+                                    flash("Wrong format!")
+                                    return render_template("CreateNewMember.html")
+                                else:
+                                    path_on_cloud = "member_images/" + \
+                                        str(emailTwo) + ".jpg"
+                                    storage.child(path_on_cloud).put(pic)
+                                    print("data has been created")
+                                    try:
+                                        user = auth.create_user_with_email_and_password(
+                                            email, pw)
+                                        print("Successfully created an account")
+                                        auth.send_email_verification(
+                                            user["idToken"])
+                                        flash(
+                                            "Please go to your email to verify your account")
+                                        return redirect(url_for("memberLogin"))
+                                    except:
+                                        print("Email already exists in database")
+                                        flash("Email already exists in database")
+                                        return render_template("CreateNewMember.html")
+                        else:
                             path_on_cloud = "member_images/" + \
                                 str(emailTwo) + ".jpg"
                             storage.child(path_on_cloud).put(
                                 "trainers-r-us\static\img\workout3.jpg")
-                            print("data has been created")
-                        else:
-                            path_on_cloud = "member_images/" + \
-                                str(emailTwo) + ".jpg"
-                            storage.child(path_on_cloud).put(pic)
-                            print("data has been created")
-                        try:
-                            user = auth.create_user_with_email_and_password(
-                                email, pw)
-                            print("Successfully created an account")
-                            auth.send_email_verification(user["idToken"])
-                            flash("Please go to your email to verify your account")
-                            return redirect(url_for("memberLogin"))
-                        except:
-                            print("Email already exists in database")
-                            flash("Email already exists in database")
-                            return render_template("CreateNewMember.html")
+                            try:
+                                user = auth.create_user_with_email_and_password(
+                                    email, pw)
+                                print("Successfully created an account")
+                                auth.send_email_verification(user["idToken"])
+                                flash(
+                                    "Please go to your email to verify your account")
+                                return redirect(url_for("memberLogin"))
+                            except:
+                                print("Email already exists in database")
+                                flash("Email already exists in database")
+                                return render_template("CreateNewMember.html")
                     except:
                         print("Image was not uploaded properly")
                         flash("Image was not uploaded properly")
@@ -256,6 +290,7 @@ def createNewTrainer():
         try:
             email = str(request.form["email"])
             print(email)
+            emailTwo = email.replace(".", "_DOT_")
             pw = str(request.form["trainerpw"])
             print(pw)
             name = str(request.form["trainername"])
@@ -276,7 +311,12 @@ def createNewTrainer():
             pricerange = str(request.form["pricerange"])
             print(pricerange)
             print('test')
-            if len(pw) < 6:
+            if database.child("Users").child(str(emailTwo)).get().val() != None or database.child("Trainers").child(str(emailTwo)).get().val() != None:
+                flash(
+                    "User in database already, please use another email to create an account")
+                print("User in database already")
+                return render_template("CreateNewTrainer.html")
+            elif len(pw) < 6:
                 flash("Password too short please try a new one")
                 return render_template("CreateNewTrainer.html")
             elif len(number) != 8:
@@ -302,29 +342,55 @@ def createNewTrainer():
                     database.child("Trainers").child(emailTwo).set(data)
                     print("Successfully uploaded personal details")
                     try:
-                        if filename == "" or filename[-3:] != "jpg":
-                            path_on_cloud = "trainer_images/" + \
+                        if filename != '':
+                            print("file is not empty")
+                            print(filename)
+                            file_ext = os.path.splitext(filename)[1]
+                            ext = filename.rsplit(".", 1)[1]
+                            if file_ext not in current_app.config['UPLOAD_EXTENSIONS']:
+                                print("Wrong format!")
+                                flash("Wrong format!")
+                                return render_template("CreateNewTrainer.html")
+                            else:
+                                if ext.upper() not in app.config["ALLOWED_IMAGE_EXTENSIONS"]:
+                                    print("Wrong format!")
+                                    flash("Wrong format!")
+                                    return render_template("CreateNewTrainer.html")
+                                else:
+                                    path_on_cloud = "trainer_images/" + \
+                                        str(emailTwo) + ".jpg"
+                                    storage.child(path_on_cloud).put(pic)
+                                    print("data has been created")
+                                    try:
+                                        user = auth.create_user_with_email_and_password(
+                                            email, pw)
+                                        print("Successfully created an account")
+                                        auth.send_email_verification(
+                                            user["idToken"])
+                                        flash(
+                                            "Please go to your email to verify your account")
+                                        return redirect(url_for("trainerLogin"))
+                                    except:
+                                        print("Email already exists in database")
+                                        flash("Email already exists in database")
+                                        return render_template("CreateNewTrainer.html")
+                        else:
+                            path_on_cloud = "member_images/" + \
                                 str(emailTwo) + ".jpg"
                             storage.child(path_on_cloud).put(
-                                "static\img\workout3.jpg")
-                            print("data has been created")
-                        else:
-                            path_on_cloud = "trainer_images/" + \
-                                str(emailTwo) + ".jpg"
-                            storage.child(path_on_cloud).put(pic)
-                            print("data has been created")
-                        try:
-                            user = auth.create_user_with_email_and_password(
-                                email, pw)
-                            print("Successfully created an account")
-                            auth.send_email_verification(user["idToken"])
-                            flash("Please go to your email to verify your account")
-                            return redirect(url_for("trainerLogin"))
-                        except:
-                            print("Email already exists in database")
-                            flash("Email already exists in database")
-                            return render_template("CreateNewTrainer.html")
-
+                                "trainers-r-us\static\img\workout3.jpg")
+                            try:
+                                user = auth.create_user_with_email_and_password(
+                                    email, pw)
+                                print("Successfully created an account")
+                                auth.send_email_verification(user["idToken"])
+                                flash(
+                                    "Please go to your email to verify your account")
+                                return redirect(url_for("trainerLogin"))
+                            except:
+                                print("Email already exists in database")
+                                flash("Email already exists in database")
+                                return render_template("CreateNewTrainer.html")
                     except:
                         print("Image was not uploaded properly")
                         flash("Image was not uploaded properly")
@@ -610,6 +676,12 @@ def logout():
     session.pop("check", None)
     session.pop("pendingBookings", None)
     return redirect(url_for("homePage"))
+
+
+@app.errorhandler(413)
+def error413(e):
+    flash("Sorry the file was too big to process. Please try registering again")
+    return render_template('413.html')
 
 
 # to take data out of database
